@@ -21,3 +21,5 @@ authresponse = requests.request("GET", authurl)
 a = json.loads(authresponse.text)
 
 token = a['token']
+
+#test commit
