@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np 
 import yfinance as yf
+from finta import TA
 
 
 
