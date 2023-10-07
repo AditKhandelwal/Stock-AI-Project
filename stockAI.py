@@ -8,25 +8,33 @@ import yfinance as yf
 
 
 
-# find way to hide secret.txt
+# find way to hide tokens.txt
 file = open("tokens.txt")
 content = file.readlines()
 
 
+# url = "https://api.polygon.io/v1/open-close/AAPL/2023-09-17?adjusted=true&apiKey=" + APIKEY
+# response = requests.get(url)
+# json_data = response.json()
+# print(json_data)
+
 # use your own account number, password and appid to authenticate (assigned from tokens.txt)
 APIKEY = str(content[0]).strip()
-TICKER = input("Enter a ticker: ")
-url = "https://api.polygon.io/v1/open-close/AAPL/2023-09-17?adjusted=true&apiKey=" + APIKEY
 
-# response = requests.get(url)
+def userInputTicker():
+    TICKER = input("Enter a ticker: ")
+    if (len(TICKER) > 5 or len(TICKER) == 0):
+        print("Stock symbols don't typically have more than 5 letters and definitely don't have 0 letters. Enter a valid ticker: ")
+        userInputTicker()
+    else:
+        TICKER = TICKER.upper()
+        return TICKER
 
-# json_data = response.json()
 
-# print(json_data)
 
 now = datetime.now().day
 
-def dataDays():
+def dataDays(TICKER):
     current_date = datetime.now()
     for i in range(14):
     # Calculate the date i days ago
@@ -38,22 +46,11 @@ def dataDays():
         #Print out JSON
         response = requests.get(url)
         json_data = response.json()
-        # if (json_data["status"] == "OK"):
-            # print(json_data)
-            # print("Date: " + str(json_data["from"]) + " | Open Price: " + str(json_data["open"]) + " | Close Price: " + str(json_data["close"]))
+        if (json_data["status"] == "OK"):
+            #print(json_data)
+            print("Date: " + str(json_data["from"]) + " | Open Price: " + str(json_data["open"]) + " | Close Price: " + str(json_data["close"]))
 
-dataDays()
-
-# url = "https://api.polygon.io/v1/open-close/" + TICKER + "/2023-0" + str(DATE) + "-17?adjusted=true&apiKey=" + APIKEY
-
-# response = requests.get(url)
-
-# json_data = response.json()
-
-# print(json_data)
-
-# print("Date: " + str(json_data["from"]) + " | Open Price: " + str(json_data["open"]) + " | Close Price: " + str(json_data["close"]))
-
-
-    
-
+#print(userInputTicker())
+dataDays(str(userInputTicker()))
+#dataDays("TSLA")
+#dataDays("tsla")
