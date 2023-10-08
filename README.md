@@ -10,6 +10,7 @@
 - NumPy
 - YFinance
 - Finta
+- MatPlotLib (For debugging/understanding how the technical indcators work only)
 
 ---
 
