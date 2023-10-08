@@ -1,6 +1,6 @@
 import requests
 import json
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np 
@@ -10,7 +10,7 @@ import yfinance as yf
 
 # Asks the user to input a stock ticker and validates the ticker to make sure that there are 
 # no invalid tickers being inputted. Also forces ticker to uppercase.
-
+indicators = ['RSI', 'MACD', 'STOCH','ADL', 'ATR', 'MOM', 'MFI', 'ROC', 'OBV', 'CCI', 'EMV', 'VORTEX']
 
 def checkValidTicker():
     valid = False
@@ -38,8 +38,6 @@ def checkValidTicker():
     
     return TICKER
 
-
-
 #Smoothens out the data given from Yahoo Finance since having erratic data will cause an error in the Machine Learning model.
 def _exponential_smooth(data, alpha):
     return data.ewm(alpha = alpha).mean()
@@ -53,7 +51,7 @@ def getPastDate():
     past_date = current_date - timedelta(days=weekendCount)
 
 
-    while(weekdayCount != 14):
+    while(weekdayCount != 60):
         if past_date.weekday() < 5:  # Saturday (5) or Sunday (6)
             weekdayCount += 1
         weekendCount += 1
@@ -74,11 +72,36 @@ def getTickerData():
     tickerData = yf.download(ticker, start="20" + pastYear + "-" + pastMonth +  "-" + pastDay, end="20" + currYear + "-" + currMonth +  "-" + currDay)
     return tickerData
 
-
 tickerData = getTickerData()
-print(tickerData.head(3))
+
+def getIndicatorData(data):
+    for indicator in indicators:
+        indicatorData = eval('TA.' + indicator + '(data)')
+        if not isinstance(indicatorData, pd.DataFrame):
+            indicatorData = indicatorData.to_frame()
+        data = data.merge(indicatorData, left_index = True, right_index = True)
+    data.rename(columns={"14 period EMV.": '14 period EMV'}, inplace = True)
+    print(data.head(50))
+    
+
+
+
+# print(len(tickerData["Close"]))
+# print(tickerData.head(3))
 
 tickerDataSmooth = _exponential_smooth(tickerData, 0.65)
-print(tickerDataSmooth.head(3))
+
+getIndicatorData(tickerDataSmooth)
+# print(tickerDataSmooth.head(3))
+
+# fig, ax1 = plt.subplots()
+# ax1.plot(np.arange(len(tickerData["Close"])), tickerData["Close"])
+# ax1.set_title('Ticker Data BEFORE SMOOTHING')
+# plt.show()
+
+# fig, ax = plt.subplots()
+# ax.plot(np.arange(len(tickerDataSmooth["Close"])), tickerDataSmooth["Close"])
+# ax.set_title('Ticker Data AFTER SMOOTHING')
+# plt.show()
 # Get data by index location
 # print(tickerData.iloc[3, 4])
