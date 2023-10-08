@@ -10,7 +10,7 @@ import yfinance as yf
 
 # Asks the user to input a stock ticker and validates the ticker to make sure that there are 
 # no invalid tickers being inputted. Also forces ticker to uppercase.
-indicators = ['RSI', 'MACD', 'STOCH','ADL', 'ATR', 'MOM', 'MFI', 'ROC', 'OBV', 'CCI', 'EMV', 'VORTEX']
+indicators = ['RSI', 'MACD', 'STOCH','ADL', 'MOM', 'MFI', 'ROC', 'OBV', 'CCI', 'EMV', 'VORTEX']
 
 def checkValidTicker():
     valid = False
@@ -81,27 +81,41 @@ def getIndicatorData(data):
             indicatorData = indicatorData.to_frame()
         data = data.merge(indicatorData, left_index = True, right_index = True)
     data.rename(columns={"14 period EMV.": '14 period EMV'}, inplace = True)
-    print(data.head(50))
-    
 
+    data["ema50"] = data["Close"] / data["Close"].ewm(50).mean()
+    data["ema21"] = data["Close"] / data["Close"].ewm(21).mean()
+    data["ema14"] = data["Close"] / data["Close"].ewm(14).mean()
+    data["ema5"] = data["Close"] / data["Close"].ewm(5).mean()
 
+    data["normalizedVolume"] = data["Volume"] / data["Volume"].ewm(5).mean()
+
+    del (data["Open"])
+    del (data["High"])
+    del (data["Low"])
+    del (data["Volume"])
+    del (data["Adj Close"])
+
+    return data
+
+def pricePredict(data, lookAheadDays):
+    prediction = (data.shift(-lookAheadDays)["Close"] >= data["Close"])
+    # prediction = prediction.iloc[:-lookAheadDays]
+    data["Prediction"] = prediction.astype(int)
+    return data
 
 # print(len(tickerData["Close"]))
 # print(tickerData.head(3))
 
 tickerDataSmooth = _exponential_smooth(tickerData, 0.65)
+tickerINDICATORData = getIndicatorData(tickerDataSmooth)
+tickerINDICATORANDPREDICT = pricePredict(tickerINDICATORData, 1)
+del (tickerINDICATORANDPREDICT["Close"])
+tickerINDICATORANDPREDICT = tickerINDICATORANDPREDICT.dropna()
+print(tickerINDICATORANDPREDICT.tail(60))
 
-getIndicatorData(tickerDataSmooth)
+
+
 # print(tickerDataSmooth.head(3))
 
-# fig, ax1 = plt.subplots()
-# ax1.plot(np.arange(len(tickerData["Close"])), tickerData["Close"])
-# ax1.set_title('Ticker Data BEFORE SMOOTHING')
-# plt.show()
-
-# fig, ax = plt.subplots()
-# ax.plot(np.arange(len(tickerDataSmooth["Close"])), tickerDataSmooth["Close"])
-# ax.set_title('Ticker Data AFTER SMOOTHING')
-# plt.show()
 # Get data by index location
 # print(tickerData.iloc[3, 4])
